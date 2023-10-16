@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+
+{% block content %}
+  <main class="form-auth form-signin w-100 m-auto" style="max-width: 300px; text-align: center">
+    <form method="post">
+      {% csrf_token %}
+      <div class="h3 mb-3 fw-normal text-nowrap">Decline Request</div>
+
+      {{ form }}
+
+      <button style="margin-top: 6px" class="w-100 btn btn-lg btn-outline-dark shadow" type="submit">Decline</button>
+      <a class="btn btn-outline-primary" style="margin-top: 6px; margin-bottom: 20px" href="{% url 'main_view' %}">Main
+        page</a>
+    </form>
+  </main>
+
+{% endblock %}

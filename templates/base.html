@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-4bw+/aepP/YC94hEpVNVgiZdgIC5+VKNBQNGCHeKRQN+PtmoHDEXuppvnDJzQIu9" crossorigin="anonymous">
+  <title>HELPDESK</title>
+  <style>
+    .header-logo {
+      font-size: 30px;
+      margin-top: 12px;
+      display: flex;
+      justify-content: space-around;
+      text-decoration: none;
+      color: black;
+    }
+    .header-logo:hover {
+      text-decoration: underline;
+      text-decoration-color: black;
+    }
+    .header-logo:active {
+      text-decoration: none;
+    }
+    .about-page,
+    .admin-page-link,
+    .user,
+    .login,
+    .logout,
+    .register{
+      font-size: 16px;
+      text-decoration: none;
+      color: black;
+    }
+    .about-page:hover,
+    .admin-page-link:hover,
+    .user:hover,
+    .login:hover,
+    .logout:hover,
+    .register:hover{
+      text-decoration: underline;
+      text-decoration-color: black;
+    }
+    .about-page:active,
+    .admin-page-link:active,
+    .user:active,
+    .login:active,
+    .logout:active,
+    .register:active{
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+<div class="header-block">
+  <div class="header">
+    <a href="{% url 'main_view' %}" class="header-logo">HELPDESK</a>
+  </div>
+
+  <div class="navbar" style="display: flex; justify-content: space-between; margin-left: 24px; margin-right: 16px">
+
+    <div>
+      {% if not request.user.is_authenticated %}
+        <a class="register" style="margin-right: 6px" href="{% url 'user:register_user_view' %}">Register</a>
+        <a class="login" style="margin-right: 6px" href="{% url 'user:login_user_view' %}">Login</a>
+      {% else %}
+        <a class="user" style="margin-right: 6px" href="">{{ request.user.username }}</a>
+        {% if request.user.is_staff %}
+          <a class="admin-page-link" style="margin-right: 6px" href="/admin">Admin page</a>
+        {% endif %}
+        <a class="logout" style="margin-right: 6px" href="{% url 'user:logout_user_view' %}">Logout</a>
+      {% endif %}
+      <a class="about-page" style="margin-right: 6px" href="{% url 'about_view' %}">About us</a>
+    </div>
+  </div>
+</div>
+  {% block content %}
+  {% endblock %}
+  {% if page_obj.has_other_pages %}
+    <nav style="padding-left: 20px" aria-label="Page navigation example">
+      <ul class="pagination">
+        <li class="page-item">
+          <a class="page-link" href="?page=1" aria-label="Previous">
+            <span aria-hidden="true" style="color: black;">&laquo;</span>
+          </a>
+        </li>
+        {% for p in paginator.page_range %}
+          {% if page_obj.number == p %}
+            <li class="page-item"><a class="page-link" style="background-color: black; color: white" href="?page={{ p }}">{{ p }}</a></li>
+          {% else %}
+            <li class="page-item"><a class="page-link" style="color: black;" href="?page={{ p }}">{{ p }}</a></li>
+          {% endif %}
+        {% endfor %}
+        <li class="page-item">
+          <a class="page-link" href="?page={{ paginator.num_pages }}" aria-label="Next">
+            <span aria-hidden="true" style="color: black;">&raquo;</span>
+          </a>
+        </li>
+      </ul>
+    </nav>
+  {% endif %}
+
+
+</body>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js" integrity="sha384-HwwvtgBNo3bZJJLYd8oVXjrBZt8cqVSpeBNS5n7C8IVInixGAoxmnlMuBnhbgrkm" crossorigin="anonymous"></script>
+</html>

@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+
+{% load request_detail %}
+
+{% block content %}
+  <ul>
+    <li style="margin-bottom: 6px">Here you can create new request: <a href="{% url 'requests:create_request_view' %}">Create Request</a></li>
+    <li style="margin-bottom: 6px">Here you can check all {% if not request.user.is_superuser %}you {% endif %}requests: <a href="{% url 'requests:request_list_view' %}">Check {% if request.user.is_superuser %} all {% else %} my {% endif %} requests</a></li>
+    {% if request.user.is_superuser %}
+      <li style="margin-bottom: 6px">Here you can check all requests for approve/decline: <a href="{% url 'requests:request_to_check_view' %}">Requests to check</a></li>
+      <li style="margin-bottom: 6px">Here you can check all requests for restoration: <a href="{% url 'requests:requests_for_restoration_view' %}">Requests for restoration</a></li>
+    {% endif %}
+  </ul>
+{% endblock %}

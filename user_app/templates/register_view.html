@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<main class="form-auth form-signup w-100 m-auto" style="max-width: 300px; text-align: center">
+  <form method="post">
+    {% csrf_token %}
+    <div class="h3 mb-3 fw-normal text-nowrap">Register new account</div>
+
+    <div class="form-floating" style="margin-bottom: 4px">
+      {{ form.username }}
+      <label for="username">Username</label>
+    </div>
+
+    <div class="form-floating" style="margin-bottom: 4px">
+      {{ form.password }}
+      <label for="password">Password</label>
+    </div>
+    <div>{{ form.password.errors }}</div>
+
+    <div class="form-floating">
+      {{ form.confirm_password }}
+      <label for="confirmPassword">Confirm Password</label>
+    </div>
+    <div>{{ form.confirm_password.errors }}</div>
+
+    <div class="my-3">
+      <p>Have already an account?</p>
+      <a href="{% url 'user:login_user_view' %}" class="text-body fw-bold">Sing in here</a>
+    </div>
+
+    <button class="w-100 btn btn-lg btn-outline-dark shadow" type="submit">join us</button>
+  </form>
+</main>
+{% endblock %}

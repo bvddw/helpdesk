@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div style="margin-top: 20px; margin-left: 24px">
+  <h2>{{ current_request.subject }}</h2>
+  <p style="font-size: 12px; margin-bottom: 0; color: rgba(0, 0, 0, 0.48)">created at: {{ current_request.created_at }}</p>
+  <p style="font-size: 12px; margin: 0; color: rgba(0, 0, 0, 0.48)">last update: {{ current_request.updated_at }}</p>
+  <p style="font-size: 12px; margin: 0; color: rgba(0, 0, 0, 0.48)">requester: {{ current_request.requester }}</p>
+  <p style="font-size: 12px; margin: 0; color: rgba(0, 0, 0, 0.48)">status: {{ current_request.status }}</p>
+  <p style="font-size: 12px; margin-top: 0; color: rgba(0, 0, 0, 0.48)">priority: {{ current_request.priority }}</p>
+  <p>{{ current_request.text }}</p>
+  {% if request.user == current_request.requester %}
+  <div style="margin-bottom: 24px">
+    <a class="btn btn-outline-warning" href="{% url 'requests:update_request_view' pk=current_request.id%}">Update</a>
+    <a class="btn btn-outline-danger" href="{% url 'requests:delete_request_view' pk=current_request.id%}">Delete</a>
+  </div>
+  {% endif %}
+  {% if request.user.is_superuser %}
+    {% if current_request.status == "Active" or current_request.status == "For restoration"%}
+      <div style="margin-bottom: 24px">
+        <a class="btn btn-outline-success" href="{% url 'requests:approve_request_view' pk=current_request.id%}">Approve</a>
+        <a class="btn btn-outline-danger" href="{% url 'requests:decline_request_view' pk=current_request.id%}">Decline</a>
+      </div>
+    {% elif current_request.status == "Approved" %}
+      <div style="margin-bottom: 24px">
+        <a class="btn btn-outline-primary" href="{% url 'requests:start_processing_request_view' pk=current_request.id%}">Start Processing</a>
+      </div>
+    {% elif current_request.status == "In process" %}
+      <div style="margin-bottom: 24px">
+        <a class="btn btn-outline-primary" href="{% url 'requests:complete_processing_request_view' pk=current_request.id%}">Complete Processing</a>
+      </div>
+    {% endif %}
+  {% elif current_request.requester == request.user and current_request.status == "Declined" %}
+    <div style="margin-bottom: 24px">
+      <p><strong>Reason of declining: </strong>{{ current_request.declined_request.comment }}</p>
+      <a class="btn btn-outline-primary" href="{% url 'requests:ask_for_restoration' pk=current_request.id%}">Resend Review</a>
+    </div>
+  {% endif %}
+  {% if form %}
+  <div>
+    <form method="post">
+      {% csrf_token %}
+      <div class="h5 mb-3 fw-normal text-nowrap">Leave comment</div>
+
+      <div class="form-floating" style="margin-bottom: 4px; margin-right: 20px">
+        {{ form.comment }}
+        <label for="username">Comment</label>
+        <button style="margin-top: 6px" class="btn btn-outline-dark shadow" type="submit">Leave</button>
+      </div>
+    </form>
+  </div>
+  {% endif %}
+  <div>
+    {% if current_request.comments.first %}
+      <h4 style="margin-top: 20px">Comments</h4>
+      {% for comment in current_request.comments.all %}
+        <div style="margin-top: 9px">
+          <p style="font-size: 20px; margin: 0; color: rgb(0, 0, 0)">{{ comment.author }}</p>
+          <p style="color: rgba(0, 0, 0, 0.72)">{{ comment.message }}</p>
+        </div>
+      {% endfor %}
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

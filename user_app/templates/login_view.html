@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<main class="form-auth form-signin w-100 m-auto" style="max-width: 300px; text-align: center">
+  <form method="post">
+    {% csrf_token %}
+    <div class="h3 mb-3 fw-normal text-nowrap">Please sign in</div>
+
+    <div class="form-floating" style="margin-bottom: 4px">
+      {{ form.username }}
+      <label for="Username">{{ form.username.label }}</label>
+      <div>{{ form.username.errors }}</div>
+    </div>
+
+    <div class="form-floating" style="margin-bottom: 4px">
+      {{ form.password }}
+      <label for="Password">{{ form.password.label }}</label>
+    </div>
+    <div>{{ form.errors }}</div>
+    <div class="my-3">
+      <p>Have no account?</p>
+      <a href="{% url 'user:register_user_view' %}" class="text-body fw-bold">Join us now</a>
+    </div>
+
+    <button class="w-100 btn btn-lg btn-outline-dark shadow" type="submit">Login</button>
+  </form>
+</main>
+{% endblock %}

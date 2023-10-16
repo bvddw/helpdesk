@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+
+{% load request_detail %}
+
+{% block content %}
+      <div style="display: flex; margin-top: 24px; margin-left: 20px; margin-right: 20px">
+        <div style="width: 33.33%; text-align: center; margin-right: 5px; border: 1px solid #ccc;">
+          LOW PRIORITY
+          {% for current_request in requests %}
+            {% if current_request.priority == "Low" %}
+              {% request_detail current_request %}
+            {% endif %}
+          {% endfor %}
+        </div>
+        <div style="width: 33.33%;  text-align: center; margin-right: 5px; margin-left: 5px; border: 1px solid #ccc;">
+          MEDIUM PRIORITY
+          {% for current_request in requests %}
+            {% if current_request.priority == "Medium" %}
+              {% request_detail current_request %}
+            {% endif %}
+          {% endfor %}
+        </div>
+        <div style="width: 33.33%;  text-align: center; margin-left: 5px; border: 1px solid #ccc;">
+          HIGH PRIORITY
+          {% for current_request in requests %}
+            {% if current_request.priority == "High" %}
+              {% request_detail current_request %}
+            {% endif %}
+          {% endfor %}
+        </div>
+      </div>
+{% endblock %}
