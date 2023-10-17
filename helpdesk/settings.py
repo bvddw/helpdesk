@@ -94,6 +94,14 @@ DATABASES = {
         'PASSWORD': 'pass',
         'HOST': 'localhost',
         'PORT': '5432',
+    },
+    'test': {
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'NAME': 'helpdeskdb_tests',
+        'USER': 'examuser',
+        'PASSWORD': 'pass',
+        'HOST': 'localhost',
+        'PORT': '5432',
     }
 }
 

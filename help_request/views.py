@@ -120,6 +120,7 @@ class RestDecline(APIView):
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         return Response({"error": "Cannot decline this request."}, status=status.HTTP_400_BAD_REQUEST)
 
+
 class RestStartProcessing(APIView):
     permission_classes = [IsAdminUser]
 
@@ -134,7 +135,8 @@ class RestStartProcessing(APIView):
             serializer = RequestSerializer(instance=cur_request)
             return Response(serializer.data, status=status.HTTP_200_OK)
         else:
-            return Response({"error": "Cannot initiate processing for this request."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": "Cannot initiate processing for this request."},
+                            status=status.HTTP_400_BAD_REQUEST)
 
 
 class RestCompleteProcessing(APIView):
@@ -161,7 +163,8 @@ class ResendReviewProcessing(APIView):
         pk = kwargs.get('pk')
         cur_request = get_object_or_404(HelpRequest, id=pk)
         if request.user != cur_request.requester:
-            return Response({"error": "You cannot resend review, because you are not a reviewer."}, status=status.HTTP_403_FORBIDDEN)
+            return Response({"error": "You cannot resend review, because you are not a reviewer."},
+                            status=status.HTTP_403_FORBIDDEN)
         if cur_request.status == StatusChoices.DECLINED:
             declined_req = get_object_or_404(DeclinedRequest, declined_request=cur_request)
             declined_req.delete()
@@ -189,7 +192,8 @@ class RequestListView(ListView):
         if self.request.user.is_superuser:
             return self.model.objects.all()
         user = self.request.user
-        return self.model.objects.filter(requester=user.id, status__in=['Approved', 'Declined', 'In process', 'Completed'])
+        return self.model.objects.filter(requester=user.id,
+                                         status__in=['Approved', 'Declined', 'In process', 'Completed'])
 
 
 class RequestDetailView(DetailView):
@@ -249,6 +253,12 @@ class CreateRequestView(CreateView):
     template_name = 'create_request_view.html'
     form_class = HelpRequestCreateForm
 
+    def get(self, request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            url = reverse('user:login_user_view')
+            return HttpResponseRedirect(url)
+        return super().get(request, *args, **kwargs)
+
     def form_valid(self, form):
         form.instance.requester = self.request.user
         return super().form_valid(form)
@@ -288,7 +298,7 @@ class DeleteRequestView(DeleteView):
         return super().get(request, *args, **kwargs)
 
 
-class CheckRequestsView(ListView):
+class ToCheckRequestsView(ListView):
     template_name = 'request_list_view.html'
     context_object_name = 'requests'
     model = HelpRequest
@@ -303,21 +313,7 @@ class CheckRequestsView(ListView):
         return self.model.objects.filter(status=StatusChoices.ACTIVE)
 
 
-class AskForReviewRequestView(View):
-    def get(self, request, *args, **kwargs):
-        cur_request = get_object_or_404(HelpRequest, id=kwargs.get('pk'))
-        if request.user != cur_request.requester:
-            url = reverse('main_view')
-            return HttpResponseRedirect(url)
-        declined_request = get_object_or_404(DeclinedRequest, declined_request=cur_request)
-        declined_request.delete()
-        cur_request.status = StatusChoices.FOR_RESTORATION
-        cur_request.save()
-        url = reverse('requests:request_detail_view', kwargs={'pk': self.kwargs.get('pk')})
-        return HttpResponseRedirect(url)
-
-
-class RestorationRequestsView(ListView):
+class ForRestorationRequestsView(ListView):
     template_name = 'request_list_view.html'
     context_object_name = 'requests'
     model = HelpRequest
@@ -336,7 +332,8 @@ class ApproveRequestView(View):
     def get(self, request, *args, **kwargs):
         pk = kwargs.get('pk')
         cur_request = get_object_or_404(HelpRequest, id=pk)
-        if (cur_request.status == StatusChoices.ACTIVE or cur_request.status == StatusChoices.FOR_RESTORATION) and request.user.is_superuser:
+        if (
+                cur_request.status == StatusChoices.ACTIVE or cur_request.status == StatusChoices.FOR_RESTORATION) and request.user.is_superuser:
             cur_request.status = StatusChoices.APPROVED
             cur_request.save()
             url = reverse('requests:request_detail_view', kwargs={'pk': pk})
@@ -360,6 +357,21 @@ class DeclineRequestView(CreateView):
 
     def get_success_url(self):
         return reverse('requests:request_detail_view', kwargs={'pk': self.kwargs.get('pk')})
+
+
+class AskForReviewRequestView(View):
+    def get(self, request, *args, **kwargs):
+        cur_request = get_object_or_404(HelpRequest, id=kwargs.get('pk'))
+        if request.user != cur_request.requester:
+            url = reverse('main_view')
+            return HttpResponseRedirect(url)
+        declined_request = get_object_or_404(DeclinedRequest, declined_request=cur_request)
+        declined_request.delete()
+        cur_request.status = StatusChoices.FOR_RESTORATION
+        cur_request.save()
+        url = reverse('requests:request_detail_view', kwargs={'pk': self.kwargs.get('pk')})
+        return HttpResponseRedirect(url)
+
 
 class StartProcessingRequestView(View):
     def get(self, request, *args, **kwargs):
