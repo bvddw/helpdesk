@@ -18,12 +18,10 @@ class CustomTokenAuthentication(TokenAuthentication):
         if not token.user.is_authenticated:
             raise exceptions.AuthenticationFailed('User is not authenticated.')
 
-        # Проверьте, если пользователь был неактивен более минуты, и удалите токен
         if not token.user.is_superuser and (timezone.now() - token.created).total_seconds() > settings.TOKEN_INACTIVITY_EXPIRED_SECONDS:
             token.delete()
             raise exceptions.AuthenticationFailed('Token deleted due to inactivity.')
 
-        # Обновите время последней активности в токене
         token.created = timezone.now()
         token.save()
 
