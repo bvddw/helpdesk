@@ -70,16 +70,7 @@ class HelpRequestUpdateForm(forms.ModelForm):
         request_to_update.text = self.cleaned_data['text']
         request_to_update.priority = self.cleaned_data['priority']
         request_to_update.save()
-
-
-class HelpRequestDeleteForm(forms.Form):
-    def __init__(self, *args, **kwargs):
-        super(HelpRequestDeleteForm, self).__init__(*args, **kwargs)
-        self.fields['confirm_delete'] = forms.BooleanField(
-            required=True,
-            widget=forms.CheckboxInput(attrs={'class': 'form-check-input'}),
-            label="I confirm that I want to delete this request"
-        )
+        return request_to_update
 
 
 class DeclinedRequestForm(forms.ModelForm):

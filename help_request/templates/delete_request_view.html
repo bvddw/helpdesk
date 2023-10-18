@@ -8,7 +8,7 @@
       {% csrf_token %}
       {{ form.as_p }}
       <button type="submit" class="btn btn-outline-danger">Delete</button>
-      <a href="{% url 'main_view'%}" class="btn btn-outline-secondary">Cancel</a>
+      <a href="{% url 'requests:request_detail_view' pk=context.pk%}" class="btn btn-outline-secondary">Cancel</a>
     </form>
   </div>
 {% endblock %}

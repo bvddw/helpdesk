@@ -1,6 +1,6 @@
 from django.http import HttpResponseRedirect
 from django.test import TestCase
-from django.urls import reverse, reverse_lazy
+from django.urls import reverse
 from django.contrib.auth import get_user_model
 
 from help_request.models import StatusChoices, HelpRequest, PriorityChoices, DeclinedRequest
@@ -35,7 +35,7 @@ class RequestListViewTestCase(TestCase):
     def setUp(self):
         self.superuser = UserModel.objects.create_superuser(
             username="admin",
-            password="adminpassword",
+            password="adminPassword",
         )
         self.user = UserModel.objects.create_user(
             username="testUser",
@@ -43,7 +43,7 @@ class RequestListViewTestCase(TestCase):
         )
 
     def test_authenticated_superuser(self):
-        self.client.login(username=self.superuser.username, password="adminpassword")
+        self.client.login(username=self.superuser.username, password="adminPassword")
 
         response = self.client.get(reverse('requests:request_list_view'))
         self.assertEqual(response.status_code, 200)
@@ -67,7 +67,7 @@ class RequestDetailViewTestCase(TestCase):
     def setUp(self):
         self.superuser = UserModel.objects.create_superuser(
             username="admin",
-            password="adminpassword",
+            password="adminPassword",
         )
         self.user = UserModel.objects.create_user(
             username="testUser",
@@ -82,7 +82,7 @@ class RequestDetailViewTestCase(TestCase):
         )
 
     def test_superuser_view(self):
-        self.client.login(username=self.superuser.username, password="adminpassword")
+        self.client.login(username=self.superuser.username, password="adminPassword")
         response = self.client.get(reverse('requests:request_detail_view', kwargs={'pk': self.request.pk}))
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'request_detail_view.html')
@@ -208,7 +208,7 @@ class DeleteRequestViewTestCase(TestCase):
         self.client.login(username=self.user.username, password="testPassword")
 
         response = self.client.post(reverse('requests:delete_request_view', kwargs={'pk': self.request.pk}))
-        self.assertEqual(response.status_code, 302)  # Redirects to the success URL
+        self.assertEqual(response.status_code, 302)
         self.assertRedirects(response, reverse('main_view'))
 
 
