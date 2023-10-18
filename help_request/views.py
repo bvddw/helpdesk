@@ -347,6 +347,12 @@ class DeclineRequestView(CreateView):
     form_class = DeclinedRequestForm
     template_name = 'decline_request_view.html'
 
+    def get(self, request, *args, **kwargs):
+        request_to_dec = get_object_or_404(HelpRequest, id=kwargs.get('pk'))
+        if request_to_dec.status not in [StatusChoices.ACTIVE, StatusChoices.FOR_RESTORATION]:
+            return HttpResponseRedirect(reverse('main_view'))
+        return super().get(request, *args, **kwargs)
+
     def form_valid(self, form):
         request_to_dec = get_object_or_404(HelpRequest, id=self.kwargs.get('pk'))
 
@@ -362,7 +368,7 @@ class DeclineRequestView(CreateView):
 class AskForReviewRequestView(View):
     def get(self, request, *args, **kwargs):
         cur_request = get_object_or_404(HelpRequest, id=kwargs.get('pk'))
-        if request.user != cur_request.requester:
+        if request.user != cur_request.requester or cur_request.status != StatusChoices.DECLINED:
             url = reverse('main_view')
             return HttpResponseRedirect(url)
         declined_request = get_object_or_404(DeclinedRequest, declined_request=cur_request)

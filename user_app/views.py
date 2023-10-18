@@ -12,6 +12,8 @@ class LoginUserView(LoginView):
     template_name = 'login_view.html'
 
     def get(self, request, **kwargs):
+        if request.user.is_authenticated:
+            return HttpResponseRedirect(reverse('main_view'))
         form = LoginUserForm()
         return render(request, self.template_name, {'form': form})
 
@@ -30,6 +32,8 @@ class RegisterUserView(View):
     template_name = 'register_view.html'
 
     def get(self, request):
+        if request.user.is_authenticated:
+            return HttpResponseRedirect(reverse('main_view'))
         form = RegistrateUserForm()
         return render(request, self.template_name, {'form': form})
 
@@ -51,6 +55,11 @@ class LogoutUserView(View):
 
 class NotAuthenticatedView(TemplateView):
     template_name = 'not_authenticated_view.html'
+
+    def get(self, request, *args, **kwargs):
+        if request.user.is_authenticated:
+            return HttpResponseRedirect(reverse('main_view'))
+        return super().get(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

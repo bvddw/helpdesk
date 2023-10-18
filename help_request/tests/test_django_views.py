@@ -3,7 +3,7 @@ from django.test import TestCase
 from django.urls import reverse, reverse_lazy
 from django.contrib.auth import get_user_model
 
-from help_request.models import StatusChoices, HelpRequest, PriorityChoices
+from help_request.models import StatusChoices, HelpRequest, PriorityChoices, DeclinedRequest
 
 UserModel = get_user_model()
 
@@ -357,3 +357,201 @@ class ApproveRequestViewTestCase(TestCase):
         self.assertEqual(response.status_code, 302)  # Redirects to the main view
         self.inactive_request.refresh_from_db()  # Refresh the object from the database
         self.assertEqual(self.inactive_request.status, old_status)
+
+
+class StartProcessRequestViewTestCase(TestCase):
+    def setUp(self):
+        self.superuser = UserModel.objects.create_superuser(
+            username="adminUser",
+            password="adminPassword"
+        )
+        self.user = UserModel.objects.create_user(
+            username="testUser",
+            password="testPassword"
+        )
+        self.approved_request = HelpRequest.objects.create(
+            subject="Active Request",
+            text="Description of the active request",
+            requester=self.user,
+            priority=PriorityChoices.LOW,
+            status=StatusChoices.APPROVED,
+        )
+        self.declined_request = HelpRequest.objects.create(
+            subject="Non-active Request",
+            text="Description of the Non-active request",
+            requester=self.user,
+            priority=PriorityChoices.LOW,
+            status=StatusChoices.DECLINED,
+        )
+
+    def test_superuser_can_start_processing_approved_request(self):
+        self.client.login(username=self.superuser.username, password="adminPassword")
+
+        response = self.client.get(reverse('requests:start_processing_request_view', kwargs={'pk': self.approved_request.pk}))
+        self.assertEqual(response.status_code, 302)  # Redirects to the detail view
+        self.approved_request.refresh_from_db()  # Refresh the object from the database
+        self.assertEqual(self.approved_request.status, StatusChoices.IN_PROCESS)
+
+    def test_non_superuser_cannot_start_processing(self):
+        self.client.login(username=self.user.username, password="testPassword")
+
+        response = self.client.get(reverse('requests:start_processing_request_view', kwargs={'pk': self.approved_request.pk}))
+        self.assertEqual(response.status_code, 302)  # Redirects to the main view
+        self.approved_request.refresh_from_db()  # Refresh the object from the database
+        self.assertNotEqual(self.approved_request.status, StatusChoices.IN_PROCESS)
+
+    def test_non_approved_request_cannot_be_changed_in_process(self):
+        self.client.login(username=self.superuser.username, password="adminPassword")
+        old_status = self.declined_request.status
+        response = self.client.get(reverse('requests:start_processing_request_view', kwargs={'pk': self.declined_request.pk}))
+        self.assertEqual(response.status_code, 302)  # Redirects to the main view
+        self.declined_request.refresh_from_db()  # Refresh the object from the database
+        self.assertEqual(self.declined_request.status, old_status)
+
+
+class CompletedRequestViewTestCase(TestCase):
+    def setUp(self):
+        self.superuser = UserModel.objects.create_superuser(
+            username="adminUser",
+            password="adminPassword"
+        )
+        self.user = UserModel.objects.create_user(
+            username="testUser",
+            password="testPassword"
+        )
+        self.in_process_request = HelpRequest.objects.create(
+            subject="Active Request",
+            text="Description of the active request",
+            requester=self.user,
+            priority=PriorityChoices.LOW,
+            status=StatusChoices.IN_PROCESS,
+        )
+        self.declined_request = HelpRequest.objects.create(
+            subject="Non-active Request",
+            text="Description of the Non-active request",
+            requester=self.user,
+            priority=PriorityChoices.LOW,
+            status=StatusChoices.DECLINED,
+        )
+
+    def test_superuser_can_finish_processing_approved_request(self):
+        self.client.login(username=self.superuser.username, password="adminPassword")
+
+        response = self.client.get(reverse('requests:complete_processing_request_view', kwargs={'pk': self.in_process_request.pk}))
+        self.assertEqual(response.status_code, 302)  # Redirects to the detail view
+        self.in_process_request.refresh_from_db()  # Refresh the object from the database
+        self.assertEqual(self.in_process_request.status, StatusChoices.COMPLETED)
+
+    def test_non_superuser_cannot_finish_processing(self):
+        self.client.login(username=self.user.username, password="testPassword")
+
+        response = self.client.get(reverse('requests:complete_processing_request_view', kwargs={'pk': self.in_process_request.pk}))
+        self.assertEqual(response.status_code, 302)  # Redirects to the main view
+        self.in_process_request.refresh_from_db()  # Refresh the object from the database
+        self.assertNotEqual(self.in_process_request.status, StatusChoices.COMPLETED)
+
+    def test_non_in_process_request_cannot_be_changed_on_completed(self):
+        self.client.login(username=self.superuser.username, password="adminPassword")
+        old_status = self.declined_request.status
+        response = self.client.get(reverse('requests:complete_processing_request_view', kwargs={'pk': self.declined_request.pk}))
+        self.assertEqual(response.status_code, 302)  # Redirects to the main view
+        self.declined_request.refresh_from_db()  # Refresh the object from the database
+        self.assertEqual(self.declined_request.status, old_status)
+
+
+class AskForReviewRequestViewTestCase(TestCase):
+    def setUp(self):
+        self.superuser = UserModel.objects.create_superuser(
+            username="adminUser",
+            password="adminPassword"
+        )
+        self.user = UserModel.objects.create_user(
+            username="testUser",
+            password="testPassword"
+        )
+        self.active_request = HelpRequest.objects.create(
+            subject="Active Request",
+            text="Description of the active request",
+            requester=self.user,
+            priority=PriorityChoices.LOW,
+            status=StatusChoices.ACTIVE,
+        )
+        self.declined_request = HelpRequest.objects.create(
+            subject="Non-active Request",
+            text="Description of the Non-active request",
+            requester=self.user,
+            priority=PriorityChoices.LOW,
+            status=StatusChoices.DECLINED,
+        )
+        self.object_in_declined_DB = DeclinedRequest.objects.create(
+            declined_request=self.declined_request,
+            comment="Reason of declining.",
+        )
+
+    def test_cannot_ask_for_review_for_not_declined_request(self):
+        self.client.login(username=self.superuser.username, password="adminPassword")
+
+        response = self.client.get(reverse('requests:ask_for_restoration', kwargs={'pk': self.active_request.pk}))
+        self.assertEqual(response.status_code, 302)  # Redirects to the detail view
+        self.active_request.refresh_from_db()  # Refresh the object from the database
+        self.assertNotEqual(self.active_request.status, StatusChoices.FOR_RESTORATION)
+
+    def test_requester_can_ask_for_review(self):
+        self.client.login(username=self.user.username, password="testPassword")
+
+        response = self.client.get(reverse('requests:ask_for_restoration', kwargs={'pk': self.declined_request.pk}))
+        self.assertEqual(response.status_code, 302)  # Redirects to the main view
+        self.declined_request.refresh_from_db()  # Refresh the object from the database
+        self.assertEqual(self.declined_request.status, StatusChoices.FOR_RESTORATION)
+
+    def test_admin_cannot_ask_for_review_for_others_requests(self):
+        self.client.login(username=self.superuser.username, password="adminPassword")
+
+        response = self.client.get(reverse('requests:ask_for_restoration', kwargs={'pk': self.declined_request.pk}))
+        self.assertEqual(response.status_code, 302)  # Redirects to the main view
+        self.declined_request.refresh_from_db()  # Refresh the object from the database
+        self.assertNotEqual(self.declined_request.status, StatusChoices.FOR_RESTORATION)
+
+
+class DeclineRequestViewTest(TestCase):
+    def setUp(self):
+        self.user = UserModel.objects.create_user(username='testUser', password='testPassword')
+        self.client.login(username=self.user.username, password='testPassword')
+
+        self.help_request = HelpRequest.objects.create(
+            subject="Non-active Request",
+            text="Description of the Non-active request",
+            requester=self.user,
+            priority=PriorityChoices.LOW,
+            status=StatusChoices.ACTIVE,
+        )
+
+    def test_get_with_valid_request(self):
+        response = self.client.get(reverse('requests:decline_request_view', kwargs={'pk': self.help_request.id}))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'decline_request_view.html')
+
+    def test_get_with_invalid_request(self):
+        self.help_request.status = StatusChoices.COMPLETED
+        self.help_request.save()
+        response = self.client.get(reverse('requests:decline_request_view', kwargs={'pk': self.help_request.id}))
+        self.assertEqual(response.status_code, 302)
+
+    def test_form_valid(self):
+        data = {
+            'comment': 'Test reason',
+        }
+        response = self.client.post(reverse('requests:decline_request_view', kwargs={'pk': self.help_request.id}), data)
+        self.assertEqual(response.status_code, 302)
+
+        declined_request = DeclinedRequest.objects.get(declined_request=self.help_request)
+        self.assertEqual(declined_request.comment, 'Test reason')
+
+        self.help_request.refresh_from_db()
+        self.assertEqual(self.help_request.status, StatusChoices.DECLINED)
+
+    def test_template_used(self):
+        self.help_request.status = StatusChoices.ACTIVE
+        self.help_request.save()
+        response = self.client.post(reverse('requests:decline_request_view', kwargs={'pk': self.help_request.id}))
+        self.assertTemplateUsed(response, "decline_request_view.html")

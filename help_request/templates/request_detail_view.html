@@ -21,6 +21,11 @@
         <a class="btn btn-outline-success" href="{% url 'requests:approve_request_view' pk=current_request.id%}">Approve</a>
         <a class="btn btn-outline-danger" href="{% url 'requests:decline_request_view' pk=current_request.id%}">Decline</a>
       </div>
+    {% elif current_request.status == "Declined" and current_request.requester == request.user %}
+      <div style="margin-bottom: 24px">
+        <p><strong>Reason of declining: </strong>{{ current_request.declined_request.comment }}</p>
+        <a class="btn btn-outline-primary" href="{% url 'requests:ask_for_restoration' pk=current_request.id%}">Resend Review</a>
+      </div>
     {% elif current_request.status == "Approved" %}
       <div style="margin-bottom: 24px">
         <a class="btn btn-outline-primary" href="{% url 'requests:start_processing_request_view' pk=current_request.id%}">Start Processing</a>
