@@ -17,7 +17,9 @@ class RequestViewSet(ModelViewSet):
     permission_classes = [RequesterOnly]
 
     def get_queryset(self):
-        queryset = HelpRequest.objects.filter(requester=self.request.user)
+        queryset = HelpRequest.objects.all()
+        if not self.request.user.is_superuser:
+            queryset = HelpRequest.objects.filter(requester=self.request.user)
 
         priority_type = self.request.query_params.get('priority_type')
         status_type = self.request.query_params.get('status_type')
@@ -30,7 +32,7 @@ class RequestViewSet(ModelViewSet):
         return queryset
 
 
-class RestAllRequests(APIView):
+class RestAllAdminsRequests(APIView):
     permission_classes = [IsAdminUser]
 
     def get(self, request, *args, **kwargs):
@@ -39,7 +41,7 @@ class RestAllRequests(APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def get_queryset(self):
-        return HelpRequest.objects.all()
+        return HelpRequest.objects.filter(requester=self.request.user)
 
 
 class RestForRestoration(APIView):
@@ -52,6 +54,19 @@ class RestForRestoration(APIView):
 
     def get_queryset(self):
         return HelpRequest.objects.filter(status=StatusChoices.FOR_RESTORATION)
+
+
+class RestActive(APIView):
+    permission_classes = [IsAdminUser]
+
+    def get(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        serializer = RequestSerializer(queryset, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def get_queryset(self):
+        return HelpRequest.objects.filter(status=StatusChoices.ACTIVE)
+
 
 
 class CommentsView(APIView):

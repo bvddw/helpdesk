@@ -10,10 +10,12 @@
   <p style="font-size: 12px; margin-top: 0; color: rgba(0, 0, 0, 0.48)">priority: {{ current_request.priority }}</p>
   <p>{{ current_request.text }}</p>
   {% if request.user == current_request.requester %}
-  <div style="margin-bottom: 24px">
-    <a class="btn btn-outline-warning" href="{% url 'requests:update_request_view' pk=current_request.id%}">Update</a>
-    <a class="btn btn-outline-danger" href="{% url 'requests:delete_request_view' pk=current_request.id%}">Delete</a>
-  </div>
+    {% if current_request.status == 'Active' or current_request.status == 'Declined' %}
+      <div style="margin-bottom: 24px">
+        <a class="btn btn-outline-warning" href="{% url 'requests:update_request_view' pk=current_request.id%}">Update</a>
+        <a class="btn btn-outline-danger" href="{% url 'requests:delete_request_view' pk=current_request.id%}">Delete</a>
+      </div>
+    {% endif %}
   {% endif %}
   {% if request.user.is_superuser and request.user != current_request.requester %}
     {% if current_request.status == "Active" or current_request.status == "For restoration"%}

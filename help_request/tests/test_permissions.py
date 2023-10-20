@@ -58,7 +58,7 @@ class RequesterOnlyPermissionTest(TestCase):
     def test_superuser_cannot_view_others_request(self):
         self.client.force_authenticate(user=self.superuser)
         response = self.client.get(f'/requests/rest/{self.request.pk}/')
-        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_superuser_cannot_edit_other_request(self):
         self.client.force_authenticate(user=self.other_user)

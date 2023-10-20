@@ -9,7 +9,7 @@
     {{ form }}
 
     <button style="margin-top: 6px" class="w-100 btn btn-lg btn-outline-dark shadow" type="submit">Update</button>
-    <a class="btn btn-outline-primary" style="margin-top: 6px; margin-bottom: 20px" href="{% url 'main_view' %}">Main page</a>
+    <a style="margin-top: 6px" href="{% url 'requests:request_detail_view' pk=context.pk%}" class="btn btn-outline-secondary">Cancel</a>
   </form>
 </main>
 

@@ -74,7 +74,7 @@ class RequestViewSetTest(TestCase):
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
 
-class RestAllRequestsTest(TestCase):
+class RestAdminsRequestsTest(TestCase):
     def setUp(self):
         self.user = MyUser.objects.create_user(
             username='testUser',
@@ -88,7 +88,7 @@ class RestAllRequestsTest(TestCase):
         HelpRequest.objects.create(
             subject='request1',
             text='text1',
-            requester=self.user,
+            requester=self.superuser,
             priority=PriorityChoices.LOW,
             status=StatusChoices.FOR_RESTORATION,
         )
@@ -107,20 +107,20 @@ class RestAllRequestsTest(TestCase):
             status=StatusChoices.FOR_RESTORATION,
         )
 
-    def test_get_requests_all_request_unauthorized(self):
-        response = self.client.get('/requests/rest/all-requests/')
+    def test_get_requests_admins_request_unauthorized(self):
+        response = self.client.get('/requests/rest/all-admins-requests/')
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
-    def test_get_requests_for_restoration_by_admin_user(self):
+    def test_get_admins_requests_by_admin_user(self):
         self.client.force_authenticate(user=self.superuser)
-        response = self.client.get('/requests/rest/all-requests/')
+        response = self.client.get('/requests/rest/all-admins-requests/')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        serializer = RequestSerializer(HelpRequest.objects.all(), many=True)
+        serializer = RequestSerializer(HelpRequest.objects.filter(requester=self.superuser), many=True)
         self.assertEqual(response.data, serializer.data)
 
-    def test_get_requests_for_restoration_by_default_user(self):
+    def test_get_admins_request_by_default_user(self):
         self.client.force_authenticate(user=self.user)
-        response = self.client.get('/requests/rest/all-requests/')
+        response = self.client.get('/requests/rest/all-admins-requests/')
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
 
@@ -171,6 +171,56 @@ class RestForRestorationTest(TestCase):
     def test_get_requests_for_restoration_by_default_user(self):
         self.client.force_authenticate(user=self.user)
         response = self.client.get('/requests/rest/for-restoration/')
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+
+class RestActiveTest(TestCase):
+    def setUp(self):
+        self.user = MyUser.objects.create_user(
+            username='testUser',
+            password='testPassword',
+        )
+        self.superuser = MyUser.objects.create_superuser(
+            username='adminUser',
+            password='adminPassword',
+        )
+        self.client = APIClient()
+        HelpRequest.objects.create(
+            subject='request1',
+            text='text1',
+            requester=self.user,
+            priority=PriorityChoices.LOW,
+            status=StatusChoices.ACTIVE,
+        )
+        HelpRequest.objects.create(
+            subject='request2',
+            text='text2',
+            requester=self.user,
+            priority=PriorityChoices.MEDIUM,
+            status=StatusChoices.ACTIVE,
+        )
+        HelpRequest.objects.create(
+            subject='request3',
+            text='text3',
+            requester=self.superuser,
+            priority=PriorityChoices.HIGH,
+            status=StatusChoices.ACTIVE,
+        )
+
+    def test_get_requests_active_unauthorized(self):
+        response = self.client.get('/requests/rest/active/')
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_get_requests_active_by_admin(self):
+        self.client.force_authenticate(user=self.superuser)
+        response = self.client.get('/requests/rest/active/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        serializer = RequestSerializer(HelpRequest.objects.filter(status=StatusChoices.ACTIVE), many=True)
+        self.assertEqual(response.data, serializer.data)
+
+    def test_get_requests_active_by_default_user(self):
+        self.client.force_authenticate(user=self.user)
+        response = self.client.get('/requests/rest/active/')
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
 

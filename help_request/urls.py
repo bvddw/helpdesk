@@ -9,7 +9,9 @@ urlpatterns = [
     # django rest paths
     path('rest/for-restoration/', views_django_rest.RestForRestoration.as_view(),
          name='rest_for_restoration'),
-    path('rest/all-requests/', views_django_rest.RestAllRequests.as_view(),
+    path('rest/active/', views_django_rest.RestActive.as_view(),
+         name='rest_active'),
+    path('rest/all-admins-requests/', views_django_rest.RestAllAdminsRequests.as_view(),
          name='rest_all_requests'),
     path('', include(router.urls)),
     path('rest/<int:pk>/resend-review/', views_django_rest.RestResendReviewProcessing.as_view(),

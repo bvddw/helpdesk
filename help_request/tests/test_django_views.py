@@ -129,8 +129,8 @@ class RequestDetailViewTestCase(TestCase):
         self.request.status = StatusChoices.ACTIVE
         self.request.save()
         response = self.client.get(reverse('requests:request_detail_view', kwargs={'pk': self.request.pk}))
-        self.assertEqual(response.status_code, 302)  # Redirects to 'main_view'
-        self.assertRedirects(response, reverse('main_view'))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'request_detail_view.html')
 
 
 class CreateRequestViewTestCase(TestCase):

@@ -3,6 +3,7 @@
 {% load request_detail %}
 
 {% block content %}
+    {% if requests %}
       <div style="display: flex; margin-top: 24px; margin-left: 20px; margin-right: 20px">
         <div style="width: 33.33%; text-align: center; margin-right: 5px; border: 1px solid #ccc;">
           LOW PRIORITY
@@ -29,4 +30,10 @@
           {% endfor %}
         </div>
       </div>
+    {% else %}
+      <div style="text-align: center; margin-top: 24px; margin-left: 20px; margin-right: 20px">
+        <h5>There are no requests. If you need help, click on this button and please fill out the form to create a request for help. We will review it as quickly as possible!</h5>
+        <a class="btn btn-outline-primary" href="{% url 'requests:create_request_view' %}">Create Request</a>
+      </div>
+    {% endif %}
 {% endblock %}

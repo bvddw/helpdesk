@@ -131,8 +131,9 @@ Contains whole information about request:
 * priority
 * text
 * buttons for updating and deleting
-* * (for admin) button for changing status, dependency on current status 
-  * (for user) only button `Resend Review`, if request was declined
+* * `admin`: button for changing status, dependency on current status 
+  * `user`: only button `Resend Review`, if request was declined
+* form for comments, if current status is `In process`
 * comments, if they exist
 
 #### Create view

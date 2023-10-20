@@ -9,11 +9,13 @@
       <h5>This website is created by volunteers for helping other people.</h5>
       <h6>If you need help, click on this button and please fill out the form to create a request for help. We will review it as quickly as possible!</h6>
       <a class="btn btn-outline-primary" href="{% url 'requests:create_request_view' %}">Create Request</a>
-      <a class="btn btn-outline-success" href="{% url 'requests:request_list_view' %}">Check my requests</a>
+      <a class="btn btn-outline-success" href="{% url 'requests:users_request_list_view' %}">Check my requests</a>
     </div>
     {% if request.user.is_superuser %}
-      <div>
-        <h4 style="margin-top: 100px">FOR ADMIN BLOCK</h4>
+      <div style="margin-top: 100px">
+        <h2>FOR ADMIN ONLY</h2>
+        <h5>Open the list of all requests</h5>
+        <a class="btn btn-outline-dark" href="{% url 'requests:all_request_view' %}">Check all requests</a>
         <h5>As you are an admin, start, please, checking requests, which needs in review (approve|decline). <strong>Remember to write decline prompt properly!</strong> <br><a style="margin-top: 6px" class="btn btn-outline-dark" href="{% url 'requests:request_to_check_view' %}">Review new requests</a></h5>
         <h5>Also, you can start checking requests, which needs in restoration validation (approve|decline). <strong>Remember to write decline prompt properly!</strong> <br><a style="margin-top: 6px" class="btn btn-outline-dark" href="{% url 'requests:requests_for_restoration_view' %}">Review resented requests</a></h5>
       </div>

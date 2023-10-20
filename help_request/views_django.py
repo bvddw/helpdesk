@@ -19,8 +19,7 @@ class UsersRequestListView(ListView):
 
     def get_queryset(self):
         user = self.request.user
-        return self.model.objects.filter(requester=user.id,
-                                         status__in=['Approved', 'Declined', 'In process', 'Completed'])
+        return self.model.objects.filter(requester=user.id)
 
 
 class AllRequestListView(ListView):
@@ -58,9 +57,6 @@ class RequestDetailView(DetailView):
                 context['form'] = CommentForm()
             return render(request, self.template_name, context)
         if request.user == self.get_object().requester:
-            if self.get_object().status == StatusChoices.ACTIVE:
-                url = reverse('main_view')
-                return HttpResponseRedirect(url)
             context = {
                 self.context_object_name: self.get_object(),
             }
@@ -114,13 +110,21 @@ class UpdateRequestView(UpdateView):
     template_name = 'update_request_view.html'
     form_class = HelpRequestUpdateForm
     pk_url_kwarg = 'pk'
+    context_object_name = 'context'
 
     def get(self, request, *args, **kwargs):
         cur_request = get_object_or_404(HelpRequest, id=kwargs.get(self.pk_url_kwarg))
+        if cur_request.status not in [StatusChoices.ACTIVE, StatusChoices.DECLINED]:
+            return HttpResponseRedirect(reverse('main_view'))
         if request.user != cur_request.requester:
             url = reverse('requests:users_request_list_view')
             return HttpResponseRedirect(url)
         return super().get(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['pk'] = kwargs.get('pk')
+        return context
 
     def get_success_url(self):
         return reverse('requests:request_detail_view', kwargs={'pk': self.object.pk})
@@ -134,6 +138,8 @@ class DeleteRequestView(DeleteView):
 
     def get(self, request, *args, **kwargs):
         cur_request = get_object_or_404(HelpRequest, id=kwargs.get(self.pk_url_kwarg))
+        if cur_request.status not in [StatusChoices.ACTIVE, StatusChoices.DECLINED]:
+            return HttpResponseRedirect(reverse('main_view'))
         if request.user != cur_request.requester:
             url = reverse('requests:users_request_list_view')
             return HttpResponseRedirect(url)
