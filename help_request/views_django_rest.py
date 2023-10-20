@@ -7,17 +7,17 @@ from rest_framework.viewsets import ModelViewSet
 
 from comments.serializers import CommentSerializer
 from .models import HelpRequest, StatusChoices, DeclinedRequest
-from .permissions import RequesterOrAdmin
+from .permissions import RequesterOnly
 from .serializers import RequestSerializer, DeclinedRequestSerializer
 
 
 class RequestViewSet(ModelViewSet):
     queryset = HelpRequest.objects.all()
     serializer_class = RequestSerializer
-    permission_classes = [RequesterOrAdmin]
+    permission_classes = [RequesterOnly]
 
     def get_queryset(self):
-        queryset = HelpRequest.objects.all()
+        queryset = HelpRequest.objects.filter(requester=self.request.user)
 
         priority_type = self.request.query_params.get('priority_type')
         status_type = self.request.query_params.get('status_type')
@@ -30,12 +30,23 @@ class RequestViewSet(ModelViewSet):
         return queryset
 
 
+class RestAllRequests(APIView):
+    permission_classes = [IsAdminUser]
+
+    def get(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        serializer = RequestSerializer(queryset, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def get_queryset(self):
+        return HelpRequest.objects.all()
+
+
 class RestForRestoration(APIView):
     permission_classes = [IsAdminUser]
 
     def get(self, request, *args, **kwargs):
         queryset = self.get_queryset()
-        print(f"Queryset: {queryset}")
         serializer = RequestSerializer(queryset, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -79,6 +90,8 @@ class RestApprove(APIView):
     def get(self, request, *args, **kwargs):
         pk = kwargs.get('pk')
         cur_request = get_object_or_404(HelpRequest, id=pk)
+        if request.user == cur_request.requester:
+            return Response({"error": "You cannot change status on yours request."}, status=status.HTTP_403_FORBIDDEN)
 
         if cur_request.status in [StatusChoices.ACTIVE, StatusChoices.FOR_RESTORATION]:
             cur_request.status = StatusChoices.APPROVED
@@ -95,11 +108,15 @@ class RestDecline(APIView):
     def get(self, request, *args, **kwargs):
         pk = kwargs.get('pk')
         cur_request = get_object_or_404(HelpRequest, id=pk)
+        if request.user == cur_request.requester:
+            return Response({"error": "You cannot change status on yours request."}, status=status.HTTP_403_FORBIDDEN)
         serializer = RequestSerializer(instance=cur_request)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def post(self, request, pk):
         cur_request = get_object_or_404(HelpRequest, pk=pk)
+        if request.user == cur_request.requester:
+            return Response({"error": "You cannot change status on yours request."}, status=status.HTTP_403_FORBIDDEN)
 
         if cur_request.status == StatusChoices.ACTIVE:
             serializer = DeclinedRequestSerializer(data=request.data)
@@ -119,6 +136,8 @@ class RestStartProcessing(APIView):
     def get(self, request, *args, **kwargs):
         pk = kwargs.get('pk')
         cur_request = get_object_or_404(HelpRequest, id=pk)
+        if request.user == cur_request.requester:
+            return Response({"error": "You cannot change status on yours request."}, status=status.HTTP_403_FORBIDDEN)
 
         if cur_request.status == StatusChoices.APPROVED:
             cur_request.status = StatusChoices.IN_PROCESS
@@ -136,6 +155,8 @@ class RestCompleteProcessing(APIView):
     def get(self, request, *args, **kwargs):
         pk = kwargs.get('pk')
         cur_request = get_object_or_404(HelpRequest, id=pk)
+        if request.user == cur_request.requester:
+            return Response({"error": "You cannot change status on yours request."}, status=status.HTTP_403_FORBIDDEN)
 
         if cur_request.status == StatusChoices.IN_PROCESS:
             cur_request.status = StatusChoices.COMPLETED

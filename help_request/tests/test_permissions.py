@@ -6,7 +6,7 @@ from help_request.serializers import RequestSerializer
 from django.contrib.auth.models import User
 
 
-class RequesterOrReadOnlyPermissionTest(TestCase):
+class RequesterOnlyPermissionTest(TestCase):
     def setUp(self):
         self.client = APIClient()
         self.user = User.objects.create_user(
@@ -41,7 +41,7 @@ class RequesterOrReadOnlyPermissionTest(TestCase):
         response = self.client.patch(f'/requests/rest/{self.request.pk}/',
                                      {'text': 'Updated text'},
                                      format='json')
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_requester_can_view_own_request(self):
         self.client.force_authenticate(user=self.user)
@@ -53,9 +53,16 @@ class RequesterOrReadOnlyPermissionTest(TestCase):
     def test_requester_cannot_view_other_request(self):
         self.client.force_authenticate(user=self.other_user)
         response = self.client.get(f'/requests/rest/{self.request.pk}/')
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
-    def test_superuser_can_view_any_request(self):
+    def test_superuser_cannot_view_others_request(self):
         self.client.force_authenticate(user=self.superuser)
         response = self.client.get(f'/requests/rest/{self.request.pk}/')
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_superuser_cannot_edit_other_request(self):
+        self.client.force_authenticate(user=self.other_user)
+        response = self.client.patch(f'/requests/rest/{self.request.pk}/',
+                                     {'text': 'Updated text'},
+                                     format='json')
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)

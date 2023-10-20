@@ -74,6 +74,56 @@ class RequestViewSetTest(TestCase):
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
 
+class RestAllRequestsTest(TestCase):
+    def setUp(self):
+        self.user = MyUser.objects.create_user(
+            username='testUser',
+            password='testPassword',
+        )
+        self.superuser = MyUser.objects.create_superuser(
+            username='adminUser',
+            password='adminPassword',
+        )
+        self.client = APIClient()
+        HelpRequest.objects.create(
+            subject='request1',
+            text='text1',
+            requester=self.user,
+            priority=PriorityChoices.LOW,
+            status=StatusChoices.FOR_RESTORATION,
+        )
+        HelpRequest.objects.create(
+            subject='request2',
+            text='text2',
+            requester=self.user,
+            priority=PriorityChoices.MEDIUM,
+            status=StatusChoices.FOR_RESTORATION,
+        )
+        HelpRequest.objects.create(
+            subject='request3',
+            text='text3',
+            requester=self.superuser,
+            priority=PriorityChoices.HIGH,
+            status=StatusChoices.FOR_RESTORATION,
+        )
+
+    def test_get_requests_all_request_unauthorized(self):
+        response = self.client.get('/requests/rest/all-requests/')
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_get_requests_for_restoration_by_admin_user(self):
+        self.client.force_authenticate(user=self.superuser)
+        response = self.client.get('/requests/rest/all-requests/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        serializer = RequestSerializer(HelpRequest.objects.all(), many=True)
+        self.assertEqual(response.data, serializer.data)
+
+    def test_get_requests_for_restoration_by_default_user(self):
+        self.client.force_authenticate(user=self.user)
+        response = self.client.get('/requests/rest/all-requests/')
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+
 class RestForRestorationTest(TestCase):
     def setUp(self):
         self.user = MyUser.objects.create_user(
@@ -107,20 +157,21 @@ class RestForRestorationTest(TestCase):
             status=StatusChoices.FOR_RESTORATION,
         )
 
-    def test_get_requests_for_restoration(self):
+    def test_get_requests_for_restoration_unauthorized(self):
         response = self.client.get('/requests/rest/for-restoration/')
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
-    def test_get_requests_for_restoration_authenticated(self):
+    def test_get_requests_for_restoration_by_admin(self):
         self.client.force_authenticate(user=self.superuser)
         response = self.client.get('/requests/rest/for-restoration/')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         serializer = RequestSerializer(HelpRequest.objects.filter(status=StatusChoices.FOR_RESTORATION), many=True)
         self.assertEqual(response.data, serializer.data)
 
-    def test_get_requests_for_restoration_no_results(self):
+    def test_get_requests_for_restoration_by_default_user(self):
+        self.client.force_authenticate(user=self.user)
         response = self.client.get('/requests/rest/for-restoration/')
-        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
 
 class CommentsViewTest(TestCase):

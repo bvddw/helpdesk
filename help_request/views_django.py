@@ -6,7 +6,7 @@ from comments.forms import CommentForm
 from .forms import HelpRequestCreateForm, HelpRequestUpdateForm, DeclinedRequestForm
 
 
-class RequestListView(ListView):
+class UsersRequestListView(ListView):
     template_name = 'request_list_view.html'
     context_object_name = 'requests'
     model = HelpRequest
@@ -18,11 +18,24 @@ class RequestListView(ListView):
         return super().get(request, *args, **kwargs)
 
     def get_queryset(self):
-        if self.request.user.is_superuser:
-            return self.model.objects.all()
         user = self.request.user
         return self.model.objects.filter(requester=user.id,
                                          status__in=['Approved', 'Declined', 'In process', 'Completed'])
+
+
+class AllRequestListView(ListView):
+    template_name = 'request_list_view.html'
+    context_object_name = 'requests'
+    model = HelpRequest
+
+    def get(self, request, *args, **kwargs):
+        if not self.request.user.is_superuser:
+            url = reverse('main_view')
+            return HttpResponseRedirect(url)
+        return super().get(request, *args, **kwargs)
+
+    def get_queryset(self):
+        return self.model.objects.all()
 
 
 class RequestDetailView(DetailView):
@@ -105,7 +118,7 @@ class UpdateRequestView(UpdateView):
     def get(self, request, *args, **kwargs):
         cur_request = get_object_or_404(HelpRequest, id=kwargs.get(self.pk_url_kwarg))
         if request.user != cur_request.requester:
-            url = reverse('requests:request_list_view')
+            url = reverse('requests:users_request_list_view')
             return HttpResponseRedirect(url)
         return super().get(request, *args, **kwargs)
 
@@ -122,7 +135,7 @@ class DeleteRequestView(DeleteView):
     def get(self, request, *args, **kwargs):
         cur_request = get_object_or_404(HelpRequest, id=kwargs.get(self.pk_url_kwarg))
         if request.user != cur_request.requester:
-            url = reverse('requests:request_list_view')
+            url = reverse('requests:users_request_list_view')
             return HttpResponseRedirect(url)
         return super().get(request, *args, **kwargs)
 

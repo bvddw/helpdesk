@@ -31,7 +31,7 @@ class AboutViewTestCase(TestCase):
         self.assertEqual(response.status_code, 200)
 
 
-class RequestListViewTestCase(TestCase):
+class UsersRequestListViewTestCase(TestCase):
     def setUp(self):
         self.superuser = UserModel.objects.create_superuser(
             username="admin",
@@ -45,22 +45,53 @@ class RequestListViewTestCase(TestCase):
     def test_authenticated_superuser(self):
         self.client.login(username=self.superuser.username, password="adminPassword")
 
-        response = self.client.get(reverse('requests:request_list_view'))
+        response = self.client.get(reverse('requests:users_request_list_view'))
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'request_list_view.html')
 
     def test_authenticated_user(self):
         self.client.login(username=self.user.username, password="testPassword")
 
-        response = self.client.get(reverse('requests:request_list_view'))
+        response = self.client.get(reverse('requests:users_request_list_view'))
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'request_list_view.html')
 
     def test_not_authenticated(self):
-        response = self.client.get(reverse('requests:request_list_view'))
+        response = self.client.get(reverse('requests:users_request_list_view'))
         self.assertEqual(response.status_code, 302)
         self.assertIsInstance(response, HttpResponseRedirect)
         self.assertEqual(response.url, reverse('user:not_authenticated_view'))
+
+
+class AllRequestsViewTest(TestCase):
+    def setUp(self):
+        self.superuser = UserModel.objects.create_superuser(
+            username="admin",
+            password="adminPassword",
+        )
+        self.user = UserModel.objects.create_user(
+            username="testUser",
+            password="testPassword",
+        )
+
+    def test_authenticated_superuser(self):
+        self.client.login(username=self.superuser.username, password="adminPassword")
+
+        response = self.client.get(reverse('requests:all_request_view'))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'request_list_view.html')
+
+    def test_authenticated_user(self):
+        self.client.login(username=self.user.username, password="testPassword")
+
+        response = self.client.get(reverse('requests:all_request_view'))
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, reverse('main_view'))
+
+    def test_not_authenticated(self):
+        response = self.client.get(reverse('requests:all_request_view'))
+        self.assertEqual(response.status_code, 302)
+        self.assertIsInstance(response, HttpResponseRedirect)
 
 
 class RequestDetailViewTestCase(TestCase):
@@ -159,7 +190,7 @@ class UpdateRequestViewTestCase(TestCase):
 
         response = self.client.get(reverse('requests:update_request_view', kwargs={'pk': self.request.pk}))
         self.assertEqual(response.status_code, 302)  # Redirects to the list view
-        self.assertRedirects(response, reverse('requests:request_list_view'))
+        self.assertRedirects(response, reverse('requests:users_request_list_view'))
 
     def test_requester_can_update(self):
         self.client.login(username=self.user.username, password="testPassword")
@@ -202,7 +233,7 @@ class DeleteRequestViewTestCase(TestCase):
 
         response = self.client.get(reverse('requests:delete_request_view', kwargs={'pk': self.request.pk}))
         self.assertEqual(response.status_code, 302)  # Redirects to the list view
-        self.assertRedirects(response, reverse('requests:request_list_view'))
+        self.assertRedirects(response, reverse('requests:users_request_list_view'))
 
     def test_requester_can_delete(self):
         self.client.login(username=self.user.username, password="testPassword")
