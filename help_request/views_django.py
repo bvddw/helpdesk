@@ -147,7 +147,7 @@ class ToCheckRequestsView(ListView):
         return super().get(request, *args, **kwargs)
 
     def get_queryset(self):
-        return self.model.objects.filter(status=StatusChoices.ACTIVE)
+        return self.model.objects.filter(status=StatusChoices.ACTIVE).exclude(requester=self.request.user)
 
 
 class ForRestorationRequestsView(ListView):
@@ -162,7 +162,7 @@ class ForRestorationRequestsView(ListView):
         return super().get(request, *args, **kwargs)
 
     def get_queryset(self):
-        return self.model.objects.filter(status=StatusChoices.FOR_RESTORATION)
+        return self.model.objects.filter(status=StatusChoices.FOR_RESTORATION).exclude(requester=self.request.user)
 
 
 class ApproveRequestView(View):
@@ -170,7 +170,7 @@ class ApproveRequestView(View):
         pk = kwargs.get('pk')
         cur_request = get_object_or_404(HelpRequest, id=pk)
         if (
-                cur_request.status == StatusChoices.ACTIVE or cur_request.status == StatusChoices.FOR_RESTORATION) and request.user.is_superuser:
+                cur_request.status == StatusChoices.ACTIVE or cur_request.status == StatusChoices.FOR_RESTORATION) and request.user.is_superuser and request.user != cur_request.requester:
             cur_request.status = StatusChoices.APPROVED
             cur_request.save()
             url = reverse('requests:request_detail_view', kwargs={'pk': pk})
@@ -186,7 +186,7 @@ class DeclineRequestView(CreateView):
 
     def get(self, request, *args, **kwargs):
         request_to_dec = get_object_or_404(HelpRequest, id=kwargs.get('pk'))
-        if request_to_dec.status not in [StatusChoices.ACTIVE, StatusChoices.FOR_RESTORATION]:
+        if request_to_dec.status not in [StatusChoices.ACTIVE, StatusChoices.FOR_RESTORATION] or (not request.user.is_superuser) or (request.user == request_to_dec.requester):
             return HttpResponseRedirect(reverse('main_view'))
         return super().get(request, *args, **kwargs)
 
@@ -220,7 +220,7 @@ class StartProcessingRequestView(View):
     def get(self, request, *args, **kwargs):
         pk = kwargs.get('pk')
         cur_request = get_object_or_404(HelpRequest, id=pk)
-        if cur_request.status == StatusChoices.APPROVED and request.user.is_superuser:
+        if cur_request.status == StatusChoices.APPROVED and request.user.is_superuser and request.user != cur_request.requester:
             cur_request.status = StatusChoices.IN_PROCESS
             cur_request.save()
             url = reverse('requests:request_detail_view', kwargs={'pk': pk})
@@ -233,7 +233,7 @@ class CompleteProcessingRequestView(View):
     def get(self, request, *args, **kwargs):
         pk = kwargs.get('pk')
         cur_request = get_object_or_404(HelpRequest, id=pk)
-        if cur_request.status == StatusChoices.IN_PROCESS and request.user.is_superuser:
+        if cur_request.status == StatusChoices.IN_PROCESS and request.user.is_superuser and request.user != cur_request.requester:
             cur_request.status = StatusChoices.COMPLETED
             cur_request.save()
             url = reverse('requests:request_detail_view', kwargs={'pk': pk})

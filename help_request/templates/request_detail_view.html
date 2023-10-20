@@ -15,7 +15,7 @@
     <a class="btn btn-outline-danger" href="{% url 'requests:delete_request_view' pk=current_request.id%}">Delete</a>
   </div>
   {% endif %}
-  {% if request.user.is_superuser %}
+  {% if request.user.is_superuser and request.user != current_request.requester %}
     {% if current_request.status == "Active" or current_request.status == "For restoration"%}
       <div style="margin-bottom: 24px">
         <a class="btn btn-outline-success" href="{% url 'requests:approve_request_view' pk=current_request.id%}">Approve</a>

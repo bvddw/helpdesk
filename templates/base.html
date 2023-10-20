@@ -32,7 +32,6 @@
     }
     .about-page:hover,
     .admin-page-link:hover,
-    .user:hover,
     .login:hover,
     .logout:hover,
     .register:hover{
@@ -62,7 +61,7 @@
         <a class="register" style="margin-right: 6px" href="{% url 'user:register_user_view' %}">Register</a>
         <a class="login" style="margin-right: 6px" href="{% url 'user:login_user_view' %}">Login</a>
       {% else %}
-        <a class="user" style="margin-right: 6px" href="">{{ request.user.username }}</a>
+        <strong class="user" style="margin-right: 6px">{{ request.user.username }}</strong>
         {% if request.user.is_staff %}
           <a class="admin-page-link" style="margin-right: 6px" href="/admin">Admin page</a>
         {% endif %}

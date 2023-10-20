@@ -3,12 +3,21 @@
 {% load request_detail %}
 
 {% block content %}
-  <ul>
-    <li style="margin-bottom: 6px">Here you can create new request: <a href="{% url 'requests:create_request_view' %}">Create Request</a></li>
-    <li style="margin-bottom: 6px">Here you can check all {% if not request.user.is_superuser %}you {% endif %}requests: <a href="{% url 'requests:request_list_view' %}">Check {% if request.user.is_superuser %} all {% else %} my {% endif %} requests</a></li>
+  <h2 style="text-align: center">Welcome to helpdesk website!</h2>
+  <div style="text-align: center; margin-left: 24px">
+    <div>
+      <h5>This website is created by volunteers for helping other people.</h5>
+      <h6>If you need help, click on this button and please fill out the form to create a request for help. We will review it as quickly as possible!</h6>
+      <a class="btn btn-outline-primary" href="{% url 'requests:create_request_view' %}">Create Request</a>
+      <a class="btn btn-outline-success" href="{% url 'requests:request_list_view' %}">Check my requests</a>
+    </div>
     {% if request.user.is_superuser %}
-      <li style="margin-bottom: 6px">Here you can check all requests for approve/decline: <a href="{% url 'requests:request_to_check_view' %}">Requests to check</a></li>
-      <li style="margin-bottom: 6px">Here you can check all requests for restoration: <a href="{% url 'requests:requests_for_restoration_view' %}">Requests for restoration</a></li>
+      <div>
+        <h4 style="margin-top: 100px">FOR ADMIN BLOCK</h4>
+        <h5>As you are an admin, start, please, checking requests, which needs in review (approve|decline). <strong>Remember to write decline prompt properly!</strong> <br><a style="margin-top: 6px" class="btn btn-outline-dark" href="{% url 'requests:request_to_check_view' %}">Review new requests</a></h5>
+        <h5>Also, you can start checking requests, which needs in restoration validation (approve|decline). <strong>Remember to write decline prompt properly!</strong> <br><a style="margin-top: 6px" class="btn btn-outline-dark" href="{% url 'requests:requests_for_restoration_view' %}">Review resented requests</a></h5>
+      </div>
     {% endif %}
-  </ul>
+  </div>
+
 {% endblock %}

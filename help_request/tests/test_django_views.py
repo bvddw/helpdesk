@@ -528,8 +528,7 @@ class DeclineRequestViewTest(TestCase):
 
     def test_get_with_valid_request(self):
         response = self.client.get(reverse('requests:decline_request_view', kwargs={'pk': self.help_request.id}))
-        self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, 'decline_request_view.html')
+        self.assertEqual(response.status_code, 302)  # only admin has accept
 
     def test_get_with_invalid_request(self):
         self.help_request.status = StatusChoices.COMPLETED
