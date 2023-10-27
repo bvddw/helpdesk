@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+  <div style="text-align: center">
+    <h2>You are not authenticated!</h2>
+    <a href="{% url 'user:register_user_view' %}" class="btn btn-outline-dark">registration page</a>
+    <a href="{% url 'user:login_user_view' %}" class="btn btn-outline-dark">login page</a>
+  </div>
+
+{% endblock %}

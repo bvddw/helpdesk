@@ -1,0 +1,16 @@
+# virtual environment
+/.venv/
+/.env/
+/venv/
+/env/
+
+# python byte-compiled
+__pycache__
+
+# ide configs
+/.vscode/
+/.idea/
+
+# local databases
+*.sqlite3
+*.db
