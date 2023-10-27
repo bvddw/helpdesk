@@ -125,12 +125,9 @@ class RequestDetailViewTestCase(TestCase):
         self.assertTemplateUsed(response, 'request_detail_view.html')
 
     def test_user_redirect(self):
-        self.client.login(username=self.user.username, password="testPassword")
-        self.request.status = StatusChoices.ACTIVE
-        self.request.save()
         response = self.client.get(reverse('requests:request_detail_view', kwargs={'pk': self.request.pk}))
-        self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, 'request_detail_view.html')
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, reverse('user:not_authenticated_view'))
 
 
 class CreateRequestViewTestCase(TestCase):

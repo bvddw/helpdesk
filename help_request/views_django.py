@@ -49,6 +49,8 @@ class RequestDetailView(DetailView):
         return request_to_display
 
     def get(self, request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return HttpResponseRedirect(reverse('user:not_authenticated_view'))
         if request.user.is_superuser:
             context = {
                 self.context_object_name: self.get_object(),
